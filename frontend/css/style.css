@@ -1,0 +1,112 @@
+/* Thiết lập các biến màu sắc (Light Mode High Contrast) */
+:root {
+    --bg-main: #f8f9fa;       /* Nền xám rất nhạt, dịu mắt */
+    --bg-card: #ffffff;       /* Nền trắng tinh cho các form/bảng */
+    --text-primary: #000000;  /* Chữ đen tuyền để tương phản tối đa với nền sáng */
+    --text-secondary: #495057;/* Chữ xám đậm cho các đoạn text phụ */
+    --primary-color: #0d6efd; /* Xanh dương đậm cho nút bấm */
+    --primary-hover: #0b5ed7; /* Xanh dương đậm hơn khi hover */
+    --error-color: #dc3545;   /* Đỏ báo lỗi rõ ràng */
+    --border-color: #ced4da;  /* Viền xám nhạt */
+}
+
+/* Reset CSS cơ bản */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Khung Đăng nhập */
+.login-wrapper {
+    width: 100%;
+    max-width: 400px;
+    padding: 20px;
+}
+
+.login-box {
+    background-color: var(--bg-card);
+    padding: 40px 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08); /* Đổ bóng nhẹ để form nổi lên */
+}
+
+.form-title {
+    text-align: center;
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.form-subtitle {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-bottom: 25px;
+}
+
+/* Ô nhập liệu */
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 15px;
+    background-color: #ffffff;
+    color: var(--text-primary); /* Chữ nhập vào luôn là đen đậm */
+    transition: border-color 0.3s;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+}
+
+/* Nút bấm */
+.btn-primary {
+    width: 100%;
+    padding: 14px;
+    background-color: var(--primary-color);
+    color: #ffffff; /* Chữ trắng trên nền xanh đậm */
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+}
+
+.error-text {
+    color: var(--error-color);
+    font-size: 14px;
+    text-align: center;
+    min-height: 20px;
+    margin-bottom: 15px;
+    font-weight: 500;
+}
