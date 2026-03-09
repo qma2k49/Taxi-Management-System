@@ -1,0 +1,11 @@
+/* Đảm bảo bản đồ chiếm toàn bộ màn hình */
+#map {
+    height: 100vh; /* 100% chiều cao màn hình */
+    width: 100vw;  /* 100% chiều rộng màn hình */
+    z-index: 1;    /* Đặt z-index thấp để các form/bảng điều khiển sau này có thể nổi lên trên bản đồ */
+}
+
+/* Ẩn bớt logo Leaflet góc dưới để giao diện sạch sẽ (Tuỳ chọn) */
+.leaflet-control-attribution {
+    display: none;
+}

@@ -1,0 +1,46 @@
+/* Đặt bảng điều khiển nổi lên góc trái bản đồ */
+.booking-panel {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
+    /* Bắt buộc phải cao hơn z-index của bản đồ */
+    background-color: var(--bg-card, #ffffff);
+    padding: 25px 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    width: 340px;
+    color: var(--text-primary, #000000);
+}
+
+.panel-title {
+    margin-bottom: 20px;
+    font-size: 22px;
+    text-align: center;
+    color: #2c3e50;
+}
+
+.booking-panel .input-group input {
+    cursor: pointer;
+    background-color: #f8f9fa;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+    margin-bottom: 20px;
+    font-size: 15px;
+    font-weight: bold;
+}
+
+.price-info {
+    color: #d9534f;
+    /* Màu đỏ đô để làm nổi bật giá tiền */
+}
+
+/* Trạng thái nút bấm khi chưa chọn đủ 2 điểm */
+#book-btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
