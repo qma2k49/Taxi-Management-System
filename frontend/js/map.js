@@ -79,7 +79,77 @@ map.on('click', function (e) {
         // Mở khóa nút Đặt xe khi đã có đủ 2 tọa độ
         document.getElementById('book-btn').disabled = false;
 
-        // (Sắp tới ở Nhiệm vụ 3 sẽ gọi hàm tính khoảng cách ở đây)
-        console.log("Đã lấy được tọa độ đi/đến, chuẩn bị tính khoảng cách...");
+        // Gọi hàm tính toán
+        calculateRouteAndPrice(pickupCoords, dropoffCoords);
     }
 });
+
+
+// Biến lưu trữ lớp vẽ đường đi (để xóa đi vẽ lại khi người dùng chọn điểm khác)
+let routeLayer = null;
+
+// Hàm gọi API OSRM để tính khoảng cách và vẽ đường
+async function calculateRouteAndPrice(pickup, dropoff) {
+    // Chú ý: API OSRM yêu cầu định dạng tọa độ là Kinh độ (lng), Vĩ độ (lat)
+    const url = `https://router.project-osrm.org/route/v1/driving/${pickup.lng},${pickup.lat};${dropoff.lng},${dropoff.lat}?overview=full&geometries=geojson`;
+
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.routes && data.routes.length > 0) {
+            const route = data.routes[0];
+
+            // 1. Tính khoảng cách (OSRM trả về đơn vị mét, cần đổi sang km)
+            const distanceKm = parseFloat((route.distance / 1000).toFixed(1));
+
+            // 2. TÍNH TIỀN DỰ KIẾN THEO CƯỚC BẬC THANG
+            let price = 0;
+
+            if (distanceKm <= 1) {
+                // Mở cửa 1km đầu tiên: 20.000đ (Đi chưa tới 1km vẫn tính 20k)
+                price = 20000;
+            } else if (distanceKm <= 25) {
+                // Từ km thứ 2 đến km 25: 20.000đ + (Số km vượt 1) * 14.000đ
+                price = 20000 + ((distanceKm - 1) * 14000);
+            } else {
+                // Từ km 26 trở đi: 20.000đ (1km đầu) + 336.000đ (24km tiếp theo) + (Số km vượt 25) * 12.000đ
+                price = 20000 + (24 * 14000) + ((distanceKm - 25) * 12000);
+            }
+
+            // Làm tròn số tiền (nếu có lẻ)
+            price = Math.round(price);
+
+            // Định dạng tiền tệ Việt Nam (VD: 15000 -> 15.000 ₫)
+            const formattedPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+
+            // 3. Hiển thị thông tin lên Bảng điều khiển
+            document.getElementById('distance-info').innerText = `Khoảng cách: ${distanceKm} km`;
+            document.getElementById('price-info').innerText = `Dự kiến: ${formattedPrice}`;
+
+            // 4. Vẽ đường đi trên bản đồ
+            // Nếu đã có đường vẽ trước đó thì xóa đi
+            if (routeLayer) {
+                map.removeLayer(routeLayer);
+            }
+
+            // Tạo đường mới từ dữ liệu GeoJSON trả về
+            routeLayer = L.geoJSON(route.geometry, {
+                style: {
+                    color: '#0d6efd', // Màu xanh dương đậm, nổi bật trên nền bản đồ
+                    weight: 5,        // Độ dày của đường
+                    opacity: 0.8
+                }
+            }).addTo(map);
+
+            // 5. Tự động thu phóng bản đồ để hiển thị trọn vẹn cả chuyến đi
+            map.fitBounds(routeLayer.getBounds(), { padding: [50, 50] });
+
+        } else {
+            alert("Không tìm thấy tuyến đường hợp lệ giữa 2 điểm này!");
+        }
+    } catch (error) {
+        console.error("Lỗi khi kết nối với OSRM API:", error);
+        alert("Có lỗi xảy ra khi tính toán quãng đường. Vui lòng thử lại!");
+    }
+}
