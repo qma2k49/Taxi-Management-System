@@ -1,0 +1,71 @@
+/* Thanh header nổi phía trên */
+.driver-header {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    z-index: 1000;
+    background-color: var(--bg-card, #ffffff);
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.driver-info h3 {
+    margin-bottom: 5px;
+    font-size: 16px;
+    color: var(--text-primary);
+}
+
+.driver-info p {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.btn-logout {
+    background-color: #f8f9fa;
+    color: #dc3545;
+    border: 1px solid #dc3545;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Panel chứa nút trạng thái dưới cùng */
+.status-panel {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    width: 90%;
+    max-width: 400px;
+}
+
+/* Nút bấm chuyển trạng thái cực to */
+.btn-status {
+    width: 100%;
+    padding: 20px;
+    font-size: 20px;
+    font-weight: bold;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.btn-status.offline {
+    background-color: #e9ecef;
+    color: #495057;
+}
+
+.btn-status.online {
+    background-color: #198754;
+    /* Xanh lá cây nổi bật */
+    color: #ffffff;
+}

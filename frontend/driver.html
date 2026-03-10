@@ -1,11 +1,51 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tài xế</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/map.css">
+    <link rel="stylesheet" href="./css/driver.css">
+    <script src="js/auth.js" defer></script>
+    <script src="js/driver.js" defer></script>
 </head>
+
 <body>
-    Hello Driver!
+    <div class="driver-header">
+        <div class="driver-info">
+            <h3 id="driver-name">Tài xế: ...</h3>
+            <p>Biển số: <strong id="license-plate">29A-123.45</strong></p>
+        </div>
+        <button onclick="logout()" class="btn-logout">Đăng xuất</button>
+    </div>
+
+    <div id="map"></div>
+
+    <div class="status-panel">
+        <button id="status-toggle" class="btn-status offline">Đang nghỉ</button>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script>
+        // Chỉ Role 3 (Driver) mới được vào
+        checkAuth(3);
+
+        // Hiển thị tên tài xế từ LocalStorage
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        if (user) document.getElementById('driver-name').innerText = `Tài xế: ${user.fullName}`;
+
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        }
+    </script>
 </body>
+
 </html>
