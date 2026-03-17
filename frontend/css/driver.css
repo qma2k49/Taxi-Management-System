@@ -69,3 +69,88 @@
     /* Xanh lá cây nổi bật */
     color: #ffffff;
 }
+
+/* Giao diện Pop-up nhận đơn */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    /* Nền đen mờ */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    /* Luôn nằm trên cùng */
+}
+
+.modal-overlay.hidden {
+    display: none;
+    /* Mặc định ẩn đi */
+}
+
+.modal-content {
+    background: var(--bg-card, #ffffff);
+    padding: 25px 20px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 320px;
+    text-align: center;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    animation: popUp 0.3s ease-out;
+    /* Hiệu ứng nảy nhẹ */
+}
+
+@keyframes popUp {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.modal-content h3 {
+    margin-bottom: 15px;
+    color: #d9534f;
+    font-size: 22px;
+}
+
+.price-highlight {
+    font-size: 24px;
+    font-weight: bold;
+    color: #198754;
+    /* Chữ màu xanh lá nhấn mạnh tiền */
+    margin: 10px 0 20px 0;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+}
+
+.modal-actions button {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-secondary {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.btn-primary {
+    background: #0d6efd;
+    color: #ffffff;
+}

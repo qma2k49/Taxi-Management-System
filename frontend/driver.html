@@ -30,6 +30,17 @@
     <div class="status-panel">
         <button id="status-toggle" class="btn-status offline">Đang nghỉ</button>
     </div>
+    <div id="new-order-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3>🔔 Có cuốc xe mới!</h3>
+            <p id="order-distance">Khoảng cách: ... km</p>
+            <p id="order-price" class="price-highlight">Giá: ... VNĐ</p>
+            <div class="modal-actions">
+                <button id="btn-reject" class="btn-secondary">Bỏ qua</button>
+                <button id="btn-accept" class="btn-primary">Nhận cuốc</button>
+            </div>
+        </div>
+    </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
