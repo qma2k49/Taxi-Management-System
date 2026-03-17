@@ -36,6 +36,10 @@ let dropoffMarker = null;
 let pickupCoords = null;
 let dropoffCoords = null;
 
+// Lưu trữ tạm thời thông tin cuốc xe
+let currentDistanceKm = 0;
+let currentEstimatedPrice = 0;
+
 // Biến kiểm soát trạng thái: 1 = Đang chọn điểm đón, 2 = Đang chọn điểm trả
 let currentSelectionStep = 1;
 
@@ -120,6 +124,10 @@ async function calculateRouteAndPrice(pickup, dropoff) {
             // Làm tròn số tiền (nếu có lẻ)
             price = Math.round(price);
 
+            // Gán vào biến toàn cục để chuẩn bị tạo đơn
+            currentDistanceKm = distanceKm;
+            currentEstimatedPrice = price;
+
             // Định dạng tiền tệ Việt Nam (VD: 15000 -> 15.000 ₫)
             const formattedPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
 
@@ -152,4 +160,53 @@ async function calculateRouteAndPrice(pickup, dropoff) {
         console.error("Lỗi khi kết nối với OSRM API:", error);
         alert("Có lỗi xảy ra khi tính toán quãng đường. Vui lòng thử lại!");
     }
+}
+
+// Xử lý sự kiện khi Khách hàng bấm "Đặt xe ngay"
+const bookBtn = document.getElementById('book-btn');
+
+if (bookBtn) {
+    bookBtn.addEventListener('click', function () {
+        // 1. Lấy thông tin khách hàng đang đăng nhập
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
+        if (!currentUser || currentUser.roleId !== 4) {
+            alert("Lỗi xác thực: Vui lòng đăng nhập lại với tư cách Khách hàng!");
+            return;
+        }
+
+        // 2. Tạo đối tượng Đơn hàng (giống hệt cấu trúc bảng Orders trong SQL Server)
+        const newOrder = {
+            orderId: "ORD" + new Date().getTime(), // Tạo mã đơn hàng ngẫu nhiên dựa trên thời gian
+            customerId: currentUser.id,
+            customerName: currentUser.fullName,
+            driverId: null, // Chưa có tài xế nhận
+            pickupLat: pickupCoords.lat,
+            pickupLng: pickupCoords.lng,
+            dropoffLat: dropoffCoords.lat,
+            dropoffLng: dropoffCoords.lng,
+            distanceKM: currentDistanceKm,
+            estimatedPrice: currentEstimatedPrice,
+            status: 'Đang chờ', // Trạng thái mặc định
+            createdAt: new Date().toISOString()
+        };
+
+        // 3. Kéo danh sách đơn hàng cũ từ hệ thống (nếu có), thêm đơn mới vào và lưu lại
+        let orders = JSON.parse(localStorage.getItem('orders')) || [];
+        orders.push(newOrder);
+        localStorage.setItem('orders', JSON.stringify(orders));
+
+        // 4. Cập nhật giao diện (Khóa nút, hiện thông báo chờ)
+        bookBtn.innerText = 'Đang tìm tài xế gần nhất...';
+        bookBtn.disabled = true;
+        bookBtn.style.backgroundColor = '#6c757d'; // Đổi sang màu xám
+
+        // Khóa không cho cắm cờ chọn lại điểm (khóa bản đồ)
+        currentSelectionStep = 3;
+
+        console.log("Đã tạo đơn hàng thành công:", newOrder);
+        alert("Đã gửi yêu cầu đặt xe! Vui lòng chờ tài xế tiếp nhận.");
+
+        // (Sắp tới ở Nhiệm vụ 3: Thiết lập vòng lặp kiểm tra xem có tài xế nào nhận đơn chưa)
+    });
 }
