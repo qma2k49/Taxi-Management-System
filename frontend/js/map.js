@@ -1,3 +1,6 @@
+let currentOrderId = null; // Lưu ID của đơn vừa đặt
+let checkOrderStatusInterval = null; // Lưu vòng lặp kiểm tra
+
 // 1. Khởi tạo bản đồ và gắn vào thẻ div có id="map"
 // Tọa độ [21.028511, 105.804817] là khu vực Hà Nội. Mức zoom 13 là độ thu phóng vừa phải.
 const map = L.map('map').setView([21.028511, 105.804817], 13);
@@ -163,50 +166,59 @@ async function calculateRouteAndPrice(pickup, dropoff) {
 }
 
 // Xử lý sự kiện khi Khách hàng bấm "Đặt xe ngay"
+// Khởi tạo kết nối tới Backend (đảm bảo server Node.js của bạn đang chạy ở cổng 3000)
+const socket = io('http://localhost:3000');
+
+currentOrderId = null; // Lưu ID của đơn vừa đặt để theo dõi
+
+// Xử lý sự kiện khi Khách hàng bấm "Đặt xe ngay"
 const bookBtn = document.getElementById('book-btn');
 
 if (bookBtn) {
     bookBtn.addEventListener('click', function () {
-        // 1. Lấy thông tin khách hàng đang đăng nhập
         const currentUser = JSON.parse(localStorage.getItem('currentUser'));
 
         if (!currentUser || currentUser.roleId !== 4) {
-            alert("Lỗi xác thực: Vui lòng đăng nhập lại với tư cách Khách hàng!");
+            alert("Vui lòng đăng nhập lại với tư cách Khách hàng!");
             return;
         }
 
-        // 2. Tạo đối tượng Đơn hàng (giống hệt cấu trúc bảng Orders trong SQL Server)
         const newOrder = {
-            orderId: "ORD" + new Date().getTime(), // Tạo mã đơn hàng ngẫu nhiên dựa trên thời gian
+            orderId: "ORD" + new Date().getTime(),
             customerId: currentUser.id,
             customerName: currentUser.fullName,
-            driverId: null, // Chưa có tài xế nhận
             pickupLat: pickupCoords.lat,
             pickupLng: pickupCoords.lng,
             dropoffLat: dropoffCoords.lat,
             dropoffLng: dropoffCoords.lng,
             distanceKM: currentDistanceKm,
             estimatedPrice: currentEstimatedPrice,
-            status: 'Đang chờ', // Trạng thái mặc định
-            createdAt: new Date().toISOString()
+            status: 'Đang chờ'
         };
 
-        // 3. Kéo danh sách đơn hàng cũ từ hệ thống (nếu có), thêm đơn mới vào và lưu lại
-        let orders = JSON.parse(localStorage.getItem('orders')) || [];
-        orders.push(newOrder);
-        localStorage.setItem('orders', JSON.stringify(orders));
+        currentOrderId = newOrder.orderId;
 
-        // 4. Cập nhật giao diện (Khóa nút, hiện thông báo chờ)
+        // BẮN SỰ KIỆN LÊN SERVER THAY VÌ LƯU LOCALSTORAGE
+        socket.emit('customer_book_ride', newOrder);
+
+        // Cập nhật giao diện (Khóa nút)
         bookBtn.innerText = 'Đang tìm tài xế gần nhất...';
         bookBtn.disabled = true;
-        bookBtn.style.backgroundColor = '#6c757d'; // Đổi sang màu xám
-
-        // Khóa không cho cắm cờ chọn lại điểm (khóa bản đồ)
+        bookBtn.style.backgroundColor = '#6c757d';
         currentSelectionStep = 3;
 
-        console.log("Đã tạo đơn hàng thành công:", newOrder);
-        alert("Đã gửi yêu cầu đặt xe! Vui lòng chờ tài xế tiếp nhận.");
-
-        // (Sắp tới ở Nhiệm vụ 3: Thiết lập vòng lặp kiểm tra xem có tài xế nào nhận đơn chưa)
+        console.log("Đã gửi đơn hàng lên Server:", newOrder);
     });
 }
+
+// LẮNG NGHE SỰ KIỆN TỪ SERVER: Khi có tài xế nhận cuốc
+socket.on('ride_accepted_success', (acceptData) => {
+    // Chỉ xử lý nếu đúng là đơn của mình vừa đặt
+    if (acceptData.orderId === currentOrderId) {
+        bookBtn.innerText = `🚕 Tài xế ${acceptData.driverName} đang tới đón bạn!`;
+        bookBtn.style.backgroundColor = '#198754';
+        bookBtn.style.color = '#ffffff';
+
+        alert(`Tin vui! Tài xế ${acceptData.driverName} đã nhận cuốc xe của bạn!`);
+    }
+});

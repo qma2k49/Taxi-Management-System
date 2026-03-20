@@ -70,58 +70,66 @@ statusToggleBtn.addEventListener('click', () => {
     }
 });
 
-// Các biến kiểm soát Pop-up
+// Khởi tạo kết nối tới Backend
+const socket = io('http://localhost:3000');
+
 const orderModal = document.getElementById('new-order-modal');
-let isModalOpen = false; // Tránh việc bật liên tục nhiều Pop-up
+let isModalOpen = false;
 let currentPendingOrder = null;
-let ignoredOrders = []; // Danh sách các ID đơn hàng tài xế đã bấm "Bỏ qua"
+let ignoredOrders = [];
 
-// 1. Vòng lặp "Radar" quét đơn hàng mỗi 3 giây
-setInterval(() => {
-    // Chỉ quét khi tài xế đã gạt nút "Sẵn sàng nhận cuốc" VÀ không có Pop-up nào đang mở
-    if (!isOnline || isModalOpen) return;
+// LẮNG NGHE SỰ KIỆN TỪ SERVER: Khi có khách hàng đặt xe
+socket.on('new_ride_request', (order) => {
+    // Bỏ qua nếu tài xế đang nghỉ, đang bận Pop-up khác, hoặc đã từng bấm "Bỏ qua" đơn này
+    if (!isOnline || isModalOpen || ignoredOrders.includes(order.orderId)) return;
 
-    // Lấy danh sách đơn hàng từ hệ thống
-    let orders = JSON.parse(localStorage.getItem('orders')) || [];
+    showNewOrderModal(order);
+});
 
-    // Tìm đơn hàng hợp lệ: Trạng thái là "Đang chờ" VÀ chưa bị tài xế này bỏ qua
-    let pendingOrder = [...orders].reverse().find(o => o.status === 'Đang chờ' && !ignoredOrders.includes(o.orderId));
-
-    if (pendingOrder) {
-        showNewOrderModal(pendingOrder);
-    }
-}, 3000);
-
-// 2. Hàm hiển thị Pop-up
 function showNewOrderModal(order) {
     isModalOpen = true;
     currentPendingOrder = order;
 
-    // Đổ dữ liệu vào HTML
     document.getElementById('order-distance').innerText = `Khoảng cách: ${order.distanceKM} km`;
-
     const formattedPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.estimatedPrice);
     document.getElementById('order-price').innerText = `${formattedPrice}`;
 
-    // Hiển thị Pop-up
     orderModal.classList.remove('hidden');
-
-    // Tạo âm thanh bíp bíp nhỏ (Tuỳ chọn)
-    console.log("🔔 Đã phát hiện đơn hàng mới:", order.orderId);
+    console.log("🔔 Đã phát hiện đơn hàng mới từ Server:", order.orderId);
 }
 
-// 3. Xử lý khi tài xế bấm "Bỏ qua"
+// Xử lý nút "Bỏ qua"
 document.getElementById('btn-reject').addEventListener('click', () => {
-    // Lưu ID đơn này lại để vòng lặp sau không quét trúng nó nữa
     ignoredOrders.push(currentPendingOrder.orderId);
-
-    // Đóng Pop-up và reset trạng thái
     orderModal.classList.add('hidden');
     isModalOpen = false;
     currentPendingOrder = null;
 });
 
-// Xử lý nút "Nhận cuốc" (Sẽ triển khai ở Nhiệm vụ 3)
+// Xử lý nút "Nhận cuốc"
 document.getElementById('btn-accept').addEventListener('click', () => {
-    alert("Chuẩn bị viết logic nhận đơn!");
+    if (!currentPendingOrder) return;
+
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
+    // Đóng gói thông tin xác nhận
+    const acceptData = {
+        orderId: currentPendingOrder.orderId,
+        driverId: currentUser.id,
+        driverName: currentUser.fullName
+    };
+
+    // BẮN SỰ KIỆN LÊN SERVER: Báo rằng tôi đã nhận đơn này
+    socket.emit('driver_accept_ride', acceptData);
+
+    // Cập nhật giao diện tài xế
+    orderModal.classList.add('hidden');
+    isModalOpen = false;
+
+    statusToggleBtn.innerText = 'Đang phục vụ khách';
+    statusToggleBtn.classList.remove('online');
+    statusToggleBtn.style.backgroundColor = '#fd7e14';
+
+    alert(`Đã nhận cuốc thành công! Hãy di chuyển đến điểm đón.`);
+    currentPendingOrder = null;
 });
