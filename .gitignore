@@ -43,3 +43,6 @@ _ReSharper*/
 
 # Ignore Nuget packages folder
 packages/
+
+*.env
+*node_modules
