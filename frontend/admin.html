@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Quản trị Hệ thống</title>
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/dashboard.css">
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="logo">🚕 Taxi Admin</div>
+            <ul class="nav-links">
+                <li class="active"><a href="#">👥 Quản lý Người dùng</a></li>
+                <li><a href="#">🚗 Quản lý Xe (Sắp ra mắt)</a></li>
+                <li><a href="#">📊 Thống kê (Sắp ra mắt)</a></li>
+            </ul>
+            <button onclick="logout()" class="btn-logout-sidebar">Đăng xuất</button>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-header">
+                <h2>Danh sách Người dùng</h2>
+                <div class="user-profile">
+                    Xin chào, <span id="admin-name">Admin</span>!
+                </div>
+            </header>
+
+            <div class="action-bar">
+                <button id="btn-open-modal" class="btn-primary">+ Thêm Người dùng mới</button>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tài khoản</th>
+                            <th>Họ và Tên</th>
+                            <th>SĐT</th>
+                            <th>Vai trò</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-table-body">
+                        <tr>
+                            <td colspan="7" style="text-align:center;">Đang tải dữ liệu...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <div id="addUserModal" class="modal-overlay hidden">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3>Thêm Tài khoản Mới</h3>
+                <button id="btn-close-modal" class="close-btn">&times;</button>
+            </div>
+            <form id="addUserForm">
+                <div class="input-group">
+                    <label>Tên đăng nhập</label>
+                    <input type="text" id="new-username" required>
+                </div>
+                <div class="input-group">
+                    <label>Mật khẩu</label>
+                    <input type="password" id="new-password" required>
+                </div>
+                <div class="input-group">
+                    <label>Họ và Tên</label>
+                    <input type="text" id="new-fullname" required>
+                </div>
+                <div class="input-group">
+                    <label>Số điện thoại</label>
+                    <input type="text" id="new-phone">
+                </div>
+                <div class="input-group">
+                    <label>Phân quyền (Role)</label>
+                    <select id="new-role" required>
+                        <option value="2">Quản lý (Manager)</option>
+                        <option value="3">Tài xế (Driver)</option>
+                        <option value="4">Khách hàng (Customer)</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary w-100">Tạo tài khoản</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+
+</html>

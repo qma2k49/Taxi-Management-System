@@ -1,0 +1,162 @@
+/* Layout tổng thể */
+.dashboard-container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    background-color: var(--bg-main, #f8f9fa);
+}
+
+/* Sidebar bên trái */
+.sidebar {
+    width: 250px;
+    background-color: #212529;
+    /* Màu tối để tương phản với khu vực làm việc */
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar .logo {
+    font-size: 24px;
+    font-weight: bold;
+    padding: 20px;
+    text-align: center;
+    border-bottom: 1px solid #343a40;
+}
+
+.nav-links {
+    list-style: none;
+    padding: 20px 0;
+    flex-grow: 1;
+}
+
+.nav-links li a {
+    display: block;
+    padding: 15px 25px;
+    color: #adb5bd;
+    text-decoration: none;
+    font-weight: 500;
+    transition: 0.3s;
+}
+
+.nav-links li.active a,
+.nav-links li a:hover {
+    background-color: #0d6efd;
+    color: #ffffff;
+}
+
+.btn-logout-sidebar {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 15px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+/* Main Content bên phải */
+.main-content {
+    flex-grow: 1;
+    padding: 20px 40px;
+    overflow-y: auto;
+}
+
+.top-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.action-bar {
+    margin-bottom: 20px;
+}
+
+/* Bảng dữ liệu */
+.table-wrapper {
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.data-table th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+    color: #495057;
+}
+
+.data-table tbody tr:hover {
+    background-color: #f1f3f5;
+}
+
+/* Các nhãn trạng thái */
+.badge {
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.badge.active {
+    background: #d1e7dd;
+    color: #0f5132;
+}
+
+.badge.locked {
+    background: #f8d7da;
+    color: #842029;
+}
+
+/* Nút thao tác trong bảng */
+.btn-sm {
+    padding: 5px 10px;
+    font-size: 13px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    margin-right: 5px;
+}
+
+.btn-warning {
+    background-color: #ffc107;
+    color: #000;
+}
+
+/* Modal */
+.modal-lg {
+    max-width: 500px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #6c757d;
+}
+
+.w-100 {
+    width: 100%;
+}
