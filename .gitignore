@@ -46,3 +46,5 @@ packages/
 
 *.env
 *node_modules
+
+*.vscode
