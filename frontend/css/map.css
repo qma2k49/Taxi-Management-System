@@ -1,11 +1,66 @@
 /* Đảm bảo bản đồ chiếm toàn bộ màn hình */
 #map {
-    height: 100vh; /* 100% chiều cao màn hình */
-    width: 100vw;  /* 100% chiều rộng màn hình */
-    z-index: 1;    /* Đặt z-index thấp để các form/bảng điều khiển sau này có thể nổi lên trên bản đồ */
+    height: 100vh;
+    /* 100% chiều cao màn hình */
+    width: 100vw;
+    /* 100% chiều rộng màn hình */
+    z-index: 1;
+    /* Đặt z-index thấp để các form/bảng điều khiển sau này có thể nổi lên trên bản đồ */
 }
 
 /* Ẩn bớt logo Leaflet góc dưới để giao diện sạch sẽ (Tuỳ chọn) */
 .leaflet-control-attribution {
     display: none;
+}
+
+/* Container chứa ô input và danh sách gợi ý */
+.autocomplete-container {
+    position: relative;
+    /* Cực kỳ quan trọng để danh sách con neo theo ô input này */
+}
+
+/* Khung danh sách gợi ý */
+.suggestions-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: #ffffff;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 2000;
+    /* Đảm bảo đè lên Leaflet Map (bản đồ thường có z-index 1000) */
+    list-style: none;
+    padding: 0;
+    margin: 4px 0 0 0;
+}
+
+/* Mặc định ẩn danh sách đi */
+.suggestions-list.hidden {
+    display: none;
+}
+
+/* Từng dòng kết quả gợi ý */
+.suggestions-list li {
+    padding: 10px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #f1f3f5;
+    font-size: 13px;
+    color: #495057;
+    line-height: 1.4;
+    transition: background-color 0.2s;
+}
+
+.suggestions-list li:last-child {
+    border-bottom: none;
+}
+
+/* Hiệu ứng khi đưa chuột vào dòng gợi ý */
+.suggestions-list li:hover {
+    background-color: #e9ecef;
+    color: #0d6efd;
+    font-weight: bold;
 }

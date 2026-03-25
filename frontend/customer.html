@@ -28,14 +28,16 @@
     <div class="booking-panel">
         <h3 class="panel-title">Đặt xe Taxi</h3>
 
-        <div class="input-group">
-            <label>Điểm đón (Cờ Xanh):</label>
-            <input type="text" id="pickup-input" placeholder="Click bản đồ để chọn..." readonly>
+        <div class="input-group autocomplete-container">
+            <label>📍 Điểm đón:</label>
+            <input type="text" id="pickup-input" placeholder="Gõ tìm địa chỉ hoặc click bản đồ...">
+            <ul id="pickup-suggestions" class="suggestions-list hidden"></ul>
         </div>
 
-        <div class="input-group">
-            <label>Điểm đến (Cờ Đỏ):</label>
-            <input type="text" id="dropoff-input" placeholder="Click bản đồ để chọn..." readonly>
+        <div class="input-group autocomplete-container">
+            <label>🚩 Điểm đến:</label>
+            <input type="text" id="dropoff-input" placeholder="Gõ tìm địa chỉ hoặc click bản đồ...">
+            <ul id="dropoff-suggestions" class="suggestions-list hidden"></ul>
         </div>
 
         <div class="info-row">
