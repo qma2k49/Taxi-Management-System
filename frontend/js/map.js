@@ -222,3 +222,128 @@ socket.on('ride_accepted_success', (acceptData) => {
         alert(`Tin vui! Tài xế ${acceptData.driverName} đã nhận cuốc xe của bạn!`);
     }
 });
+
+// === TÍNH NĂNG TÌM KIẾM ĐỊA ĐIỂM (GEOCODING) ===
+
+const pickupInput = document.getElementById('pickup-input');
+const dropoffInput = document.getElementById('dropoff-input');
+const pickupSuggestions = document.getElementById('pickup-suggestions');
+const dropoffSuggestions = document.getElementById('dropoff-suggestions');
+
+let searchTimeout; // Biến lưu trữ thời gian chờ (Debounce)
+
+// 1. Hàm Debounce: Lắng nghe sự kiện gõ phím
+function handleInput(e, suggestionsList, type) {
+    const query = e.target.value.trim();
+
+    clearTimeout(searchTimeout); // Hủy lệnh gọi cũ nếu người dùng đang gõ liên tục
+
+    if (!query) {
+        suggestionsList.classList.add('hidden');
+        return;
+    }
+
+    // Đợi người dùng ngừng gõ 500ms thì mới gọi API
+    searchTimeout = setTimeout(() => {
+        fetchLocations(query, suggestionsList, type);
+    }, 500);
+}
+
+// 2. Hàm Gọi API Nominatim
+async function fetchLocations(query, suggestionsList, type) {
+    try {
+        // Gọi API của OpenStreetMap, giới hạn kết quả ở Việt Nam (countrycodes=vn)
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=vn&limit=5`);
+        const data = await response.json();
+
+        suggestionsList.innerHTML = ''; // Xóa các kết quả gợi ý cũ
+
+        if (data.length === 0) {
+            suggestionsList.innerHTML = '<li style="color: red;">Không tìm thấy địa điểm.</li>';
+            suggestionsList.classList.remove('hidden');
+            return;
+        }
+
+        // 3. Đổ dữ liệu ra danh sách <li>
+        data.forEach(place => {
+            const li = document.createElement('li');
+            li.innerText = place.display_name; // Tên địa chỉ đầy đủ
+
+            // Xử lý sự kiện khi khách hàng bấm chọn 1 gợi ý
+            li.addEventListener('click', () => {
+                selectLocation(place, type, suggestionsList);
+            });
+
+            suggestionsList.appendChild(li);
+        });
+
+        suggestionsList.classList.remove('hidden'); // Hiện danh sách lên
+    } catch (error) {
+        console.error('Lỗi gọi API tìm kiếm:', error);
+    }
+}
+
+// Gắn sự kiện gõ phím (input) cho 2 ô tìm kiếm
+pickupInput.addEventListener('input', (e) => handleInput(e, pickupSuggestions, 'pickup'));
+dropoffInput.addEventListener('input', (e) => handleInput(e, dropoffSuggestions, 'dropoff'));
+
+// 4. Hàm xử lý khi khách chọn một địa chỉ từ danh sách
+function selectLocation(place, type, suggestionsList) {
+    // Chuyển đổi tọa độ từ chuỗi (string) sang số thập phân (float)
+    const lat = parseFloat(place.lat);
+    const lng = parseFloat(place.lon);
+
+    if (type === 'pickup') {
+        // Cập nhật ô input
+        pickupInput.value = place.display_name;
+
+        // Lưu vào biến tọa độ hệ thống (biến toàn cục đã khai báo từ Tuần 2)
+        pickupCoords = { lat: lat, lng: lng };
+
+        // Hiệu ứng "bay" bản đồ đến điểm đón với mức zoom 16
+        map.flyTo([lat, lng], 16, { duration: 1.5 });
+
+        // Vẽ cờ Xanh (Điểm đón)
+        if (pickupMarker) map.removeLayer(pickupMarker); // Xóa cờ cũ nếu có
+        pickupMarker = L.marker([lat, lng], { icon: pickupIcon }).addTo(map)
+            .bindPopup("<b>📍 Điểm đón:</b><br>" + place.display_name).openPopup();
+
+        // Đổi trạng thái để hệ thống biết tiếp theo cần chọn điểm trả
+        if (currentSelectionStep === 1) currentSelectionStep = 2;
+
+    } else { // type === 'dropoff'
+        // Cập nhật ô input
+        dropoffInput.value = place.display_name;
+
+        // Lưu vào biến tọa độ hệ thống
+        dropoffCoords = { lat: lat, lng: lng };
+
+        // Hiệu ứng "bay" bản đồ đến điểm trả
+        map.flyTo([lat, lng], 16, { duration: 1.5 });
+
+        // Vẽ cờ Đỏ (Điểm đến)
+        if (dropoffMarker) map.removeLayer(dropoffMarker);
+        dropoffMarker = L.marker([lat, lng], { icon: dropoffIcon }).addTo(map)
+            .bindPopup("<b>🚩 Điểm đến:</b><br>" + place.display_name).openPopup();
+    }
+
+    // Giấu danh sách gợi ý đi sau khi chọn xong
+    suggestionsList.classList.add('hidden');
+
+    console.log(`Đã ghim cờ ${type} tại: ${lat}, ${lng}`);
+
+    // === ĐIỂM SÁNG GIÁ NHẤT: KÍCH HOẠT TÍNH TIỀN ===
+    // Nếu hệ thống phát hiện đã có đủ cả điểm đón và điểm trả, lập tức vẽ đường và tính giá!
+    if (pickupCoords && dropoffCoords) {
+        // Hàm này chúng ta đã viết sẵn từ Tuần 2
+        calculateRouteAndPrice(pickupCoords, dropoffCoords);
+    }
+}
+
+// 5. Tính năng phụ: Bấm ra ngoài vùng tìm kiếm thì tự động giấu danh sách
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.autocomplete-container')) {
+        pickupSuggestions.classList.add('hidden');
+        dropoffSuggestions.classList.add('hidden');
+    }
+});
