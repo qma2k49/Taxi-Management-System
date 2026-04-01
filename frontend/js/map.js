@@ -103,41 +103,46 @@ async function calculateRouteAndPrice(pickup, dropoff) {
     try {
         const response = await fetch(url);
         const data = await response.json();
+        if (data.code !== 'Ok' || !data.routes || data.routes.length === 0) {
+            alert("❌ Không tìm thấy tuyến đường ô tô giữa 2 điểm này. Vui lòng chọn vị trí gần đường giao thông hơn!");
+
+            // Xóa cờ điểm đến (cờ Đỏ) bị cắm sai để khách chọn lại
+            if (dropoffMarker) {
+                map.removeLayer(dropoffMarker);
+                dropoffMarker = null;
+                dropoffCoords = null;
+            }
+
+            // Lùi bước chọn lại điểm đến
+            currentSelectionStep = 2;
+
+            // Tắt nút đặt xe
+            const bookBtn = document.getElementById('book-btn');
+            bookBtn.disabled = true;
+            bookBtn.style.backgroundColor = '#ccc';
+            bookBtn.innerText = 'Chọn lại điểm đến';
+
+            return; // Dừng hàm tại đây, không chạy tiếp đoạn vẽ đường nữa
+        }
 
         if (data.routes && data.routes.length > 0) {
+            if (typeof blueLine !== 'undefined' && blueLine) {
+                map.removeLayer(blueLine);
+            }
+
+            // Lấy tọa độ đường đi và vẽ
+            const routeCoordinates = data.routes[0].geometry.coordinates.map(coord => [coord[1], coord[0]]);
+            blueLine = L.polyline(routeCoordinates, { color: 'blue', weight: 4 }).addTo(map);
+
+            // Ép bản đồ zoom vừa vặn với quãng đường
+            map.fitBounds(blueLine.getBounds(), { padding: [50, 50] });
+            // ===============================
+
             // Lấy khoảng cách KM
             const distanceKm = (data.routes[0].distance / 1000).toFixed(1);
 
             // GỌI HÀM TÍNH TIỀN LŨY TIẾN VỪA TẠO
             const fareResult = calculateTaxiFare(distanceKm);
-
-            // Lưu vào biến toàn cục để chuẩn bị gửi lên Server khi bấm "Đặt xe"
-            currentDistanceKm = distanceKm;
-            currentEstimatedPrice = fareResult.total;
-
-            // Định dạng tiền tệ Việt Nam
-            const formattedPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(fareResult.total);
-
-            // Tạo câu thông báo giá tiền (Kiểm tra xem có bị phụ thu đêm không)
-            let priceMessage = `Khoảng cách: ${distanceKm} km<br>Giá cước dự kiến: <strong>${formattedPrice}</strong>`;
-            if (fareResult.isNight) {
-                priceMessage += `<br><span style="color: #dc3545; font-size: 12px;">(Đã bao gồm 20% phụ thu ban đêm)</span>`;
-            }
-
-            // Hiển thị lên màn hình (Popup ở giữa đường đi)
-            const midPoint = Math.floor(routeCoordinates.length / 2);
-            L.popup()
-                .setLatLng([routeCoordinates[midPoint][0], routeCoordinates[midPoint][1]])
-                .setContent(priceMessage)
-                .openOn(map);
-
-            // Bật sáng nút Đặt xe
-            const bookBtn = document.getElementById('book-btn');
-            if (bookBtn) {
-                bookBtn.disabled = false;
-                bookBtn.style.backgroundColor = '#0d6efd';
-                bookBtn.innerText = 'Đặt xe ngay';
-            }
         }
         else {
             alert("Không tìm thấy tuyến đường hợp lệ giữa 2 điểm này!");
@@ -288,7 +293,7 @@ function selectLocation(place, type, suggestionsList) {
 
         // Vẽ cờ Xanh (Điểm đón)
         if (pickupMarker) map.removeLayer(pickupMarker); // Xóa cờ cũ nếu có
-        pickupMarker = L.marker([lat, lng], { icon: pickupIcon }).addTo(map)
+        pickupMarker = L.marker([lat, lng], { icon: greenIcon }).addTo(map)
             .bindPopup("<b>📍 Điểm đón:</b><br>" + place.display_name).openPopup();
 
         // Đổi trạng thái để hệ thống biết tiếp theo cần chọn điểm trả
@@ -306,7 +311,7 @@ function selectLocation(place, type, suggestionsList) {
 
         // Vẽ cờ Đỏ (Điểm đến)
         if (dropoffMarker) map.removeLayer(dropoffMarker);
-        dropoffMarker = L.marker([lat, lng], { icon: dropoffIcon }).addTo(map)
+        dropoffMarker = L.marker([lat, lng], { icon: redIcon }).addTo(map)
             .bindPopup("<b>🚩 Điểm đến:</b><br>" + place.display_name).openPopup();
     }
 
@@ -365,4 +370,48 @@ function calculateTaxiFare(distanceKm) {
         total: Math.round(price), // Làm tròn số tiền để không bị lẻ đồng
         isNight: isNightSurcharge
     };
+}
+
+// === XỬ LÝ NÚT LÀM MỚI BẢN ĐỒ ===
+const resetBtn = document.getElementById('reset-btn');
+if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+        // 1. Xóa các cờ (Markers)
+        if (pickupMarker) map.removeLayer(pickupMarker);
+        if (dropoffMarker) map.removeLayer(dropoffMarker);
+        pickupMarker = null;
+        dropoffMarker = null;
+        pickupCoords = null;
+        dropoffCoords = null;
+
+        // 2. Xóa đường kẻ xanh (Polyline)
+        // Lưu ý: Nếu ở Tuần 2 bạn đặt tên biến chứa đường kẻ là currentRouteLine hoặc blueLine, hãy dùng đúng tên đó
+        if (typeof blueLine !== 'undefined' && blueLine) {
+            map.removeLayer(blueLine);
+            blueLine = null;
+        }
+
+        // 3. Xóa trắng các ô input tìm kiếm
+        document.getElementById('pickup-input').value = '';
+        document.getElementById('dropoff-input').value = '';
+        document.getElementById('pickup-input').dataset.lat = '';
+        document.getElementById('pickup-input').dataset.lon = '';
+        document.getElementById('dropoff-input').dataset.lat = '';
+        document.getElementById('dropoff-input').dataset.lon = '';
+
+        // 4. Reset trạng thái hệ thống về bước 1
+        currentSelectionStep = 1;
+
+        // 5. Đóng mọi popup đang mở trên bản đồ và reset nút Đặt xe
+        map.closePopup();
+
+        const bookBtn = document.getElementById('book-btn');
+        if (bookBtn) {
+            bookBtn.disabled = true;
+            bookBtn.style.backgroundColor = '#ccc';
+            bookBtn.innerText = 'Chọn điểm để đặt';
+        }
+
+        console.log("Đã làm mới bản đồ!");
+    });
 }

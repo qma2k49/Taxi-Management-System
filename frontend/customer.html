@@ -45,7 +45,14 @@
             <span class="price-info" id="price-info">Dự kiến: -- VNĐ</span>
         </div>
 
-        <button class="btn-primary" id="book-btn" disabled>Đặt xe ngay</button>
+        <div class="action-buttons" style="display: flex; gap: 10px; margin-top: 20px;">
+            <button id="reset-btn" class="btn-secondary"
+                style="flex: 1; padding: 12px; border: none; border-radius: 6px; cursor: pointer; background-color: #e9ecef; font-weight: bold; color: #495057;">Làm
+                mới</button>
+            <button id="book-btn" class="btn-primary" disabled
+                style="flex: 2; padding: 12px; border: none; border-radius: 6px; cursor: pointer; background-color: #ccc; font-weight: bold; color: white;">Chọn
+                điểm để đặt</button>
+        </div>
     </div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
