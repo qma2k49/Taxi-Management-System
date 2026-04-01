@@ -141,8 +141,52 @@ async function calculateRouteAndPrice(pickup, dropoff) {
             // Lấy khoảng cách KM
             const distanceKm = (data.routes[0].distance / 1000).toFixed(1);
 
-            // GỌI HÀM TÍNH TIỀN LŨY TIẾN VỪA TẠO
-            const fareResult = calculateTaxiFare(distanceKm);
+            try {
+                const fareResponse = await fetch('http://localhost:3000/api/fare/calculate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ distanceKm: distanceKm })
+                });
+
+                const fareData = await fareResponse.json();
+
+                if (fareData.success) {
+                    const fareResult = fareData.data; // Đây chính là { total: ..., isNight: ... } từ Server trả về
+
+                    // Lưu vào biến toàn cục để chuẩn bị gửi lên Server khi bấm "Đặt xe"
+                    currentDistanceKm = distanceKm;
+                    currentEstimatedPrice = fareResult.total;
+
+                    // Định dạng tiền tệ Việt Nam
+                    const formattedPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(fareResult.total);
+
+                    // Tạo câu thông báo giá tiền
+                    let priceMessage = `Khoảng cách: ${distanceKm} km<br>Giá cước dự kiến: <strong>${formattedPrice}</strong>`;
+                    if (fareResult.isNight) {
+                        priceMessage += `<br><span style="color: #dc3545; font-size: 12px;">(Đã bao gồm 20% phụ thu ban đêm)</span>`;
+                    }
+
+                    // Hiển thị Popup ở giữa đường đi
+                    const midPoint = Math.floor(routeCoordinates.length / 2);
+                    L.popup()
+                        .setLatLng([routeCoordinates[midPoint][0], routeCoordinates[midPoint][1]])
+                        .setContent(priceMessage)
+                        .openOn(map);
+
+                    // Bật sáng nút Đặt xe
+                    const bookBtn = document.getElementById('book-btn');
+                    if (bookBtn) {
+                        bookBtn.disabled = false;
+                        bookBtn.style.backgroundColor = '#0d6efd';
+                        bookBtn.innerText = 'Đặt xe ngay';
+                    }
+                } else {
+                    alert("Có lỗi khi tính toán giá cước từ Server!");
+                }
+            } catch (err) {
+                console.error("Lỗi gọi API tính tiền:", err);
+                alert("Không thể kết nối đến máy chủ tính cước.");
+            }
         }
         else {
             alert("Không tìm thấy tuyến đường hợp lệ giữa 2 điểm này!");
@@ -335,42 +379,6 @@ document.addEventListener('click', (e) => {
         dropoffSuggestions.classList.add('hidden');
     }
 });
-
-// Hàm tính cước taxi chuẩn thực tế
-function calculateTaxiFare(distanceKm) {
-    let price = 0;
-
-    // 1. Giá mở cửa (2km đầu tiên)
-    if (distanceKm <= 2) {
-        price = 20000;
-    } else {
-        price = 20000; // Tiền cố định cho 2km đầu
-
-        // 2. Lũy tiến từ km thứ 2 đến km 20
-        if (distanceKm <= 20) {
-            price += (distanceKm - 2) * 13000;
-        }
-        // 3. Lũy tiến từ km 21 trở đi
-        else {
-            price += (18 * 13000); // Trả cho đoạn từ km 2 đến km 20
-            price += (distanceKm - 20) * 11000; // Trả cho đoạn từ km 21 trở đi
-        }
-    }
-
-    // 4. Phụ thu ban đêm (22h00 - 05h59 sáng)
-    const currentHour = new Date().getHours();
-    let isNightSurcharge = false;
-
-    if (currentHour >= 22 || currentHour < 5) {
-        price = price * 1.2; // Tăng 20%
-        isNightSurcharge = true;
-    }
-
-    return {
-        total: Math.round(price), // Làm tròn số tiền để không bị lẻ đồng
-        isNight: isNightSurcharge
-    };
-}
 
 // === XỬ LÝ NÚT LÀM MỚI BẢN ĐỒ ===
 const resetBtn = document.getElementById('reset-btn');
