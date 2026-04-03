@@ -119,3 +119,135 @@ document.getElementById('addUserForm').addEventListener('submit', async (e) => {
         alert('Lỗi kết nối máy chủ!');
     }
 });
+
+// ==========================================
+// 4. CHUYỂN ĐỔI TAB (USERS & TAXIS)
+// ==========================================
+function switchTab(tab) {
+    if (tab === 'users') {
+        document.getElementById('section-users').classList.remove('hidden');
+        document.getElementById('section-taxis').classList.add('hidden');
+        document.getElementById('tab-users').classList.add('active');
+        document.getElementById('tab-taxis').classList.remove('active');
+        document.getElementById('main-title').innerText = 'Danh sách Người dùng';
+        fetchUsers();
+    } else if (tab === 'taxis') {
+        document.getElementById('section-users').classList.add('hidden');
+        document.getElementById('section-taxis').classList.remove('hidden');
+        document.getElementById('tab-users').classList.remove('active');
+        document.getElementById('tab-taxis').classList.add('active');
+        document.getElementById('main-title').innerText = 'Quản lý Xe';
+        fetchTaxis();
+    }
+}
+
+// ==========================================
+// 5. LẤY VÀ HIỂN THỊ DANH SÁCH TAXI
+// ==========================================
+async function fetchTaxis() {
+    try {
+        const response = await fetch('http://localhost:3000/api/taxis');
+        const data = await response.json();
+
+        if (data.success) {
+            renderTaxiTable(data.data);
+        }
+    } catch (error) {
+        console.error('Lỗi lấy dữ liệu Taxi:', error);
+        document.getElementById('taxi-table-body').innerHTML = `<tr><td colspan="5">Lỗi kết nối máy chủ!</td></tr>`;
+    }
+}
+
+function renderTaxiTable(taxis) {
+    const tbody = document.getElementById('taxi-table-body');
+    tbody.innerHTML = '';
+
+    if (taxis.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">Chưa có xe nào.</td></tr>`;
+        return;
+    }
+
+    taxis.forEach(taxi => {
+        let statusBadge = '';
+        if (taxi.Status === 'Rảnh') {
+            statusBadge = `<span class="badge active">${taxi.Status}</span>`;
+        } else if (taxi.Status === 'Đang bận') {
+            statusBadge = `<span class="badge warning" style="background-color: #ff9800; color: white;">${taxi.Status}</span>`;
+        } else {
+            statusBadge = `<span class="badge locked">${taxi.Status}</span>`;
+        }
+
+        const row = `
+            <tr>
+                <td>#${taxi.TaxiID}</td>
+                <td><strong>${taxi.LicensePlate}</strong></td>
+                <td>${taxi.VehicleType}</td>
+                <td>${statusBadge}</td>
+                <td>
+                    <button class="btn-sm btn-danger" onclick="deleteTaxi(${taxi.TaxiID})">Xóa</button>
+                </td>
+            </tr>
+        `;
+        tbody.innerHTML += row;
+    });
+}
+
+// ==========================================
+// 6. XỬ LÝ FORM THÊM MỚI XE
+// ==========================================
+const taxiModal = document.getElementById('addTaxiModal');
+document.getElementById('btn-open-taxi-modal').addEventListener('click', () => taxiModal.classList.remove('hidden'));
+document.getElementById('btn-close-taxi-modal').addEventListener('click', () => taxiModal.classList.add('hidden'));
+
+document.getElementById('addTaxiForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const payload = {
+        licensePlate: document.getElementById('new-license-plate').value,
+        vehicleType: document.getElementById('new-vehicle-type').value,
+        status: 'Rảnh'
+    };
+
+    try {
+        const response = await fetch('http://localhost:3000/api/taxis', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            alert('Thêm xe thành công!');
+            taxiModal.classList.add('hidden');
+            document.getElementById('addTaxiForm').reset();
+            fetchTaxis();
+        } else {
+            alert(data.message);
+        }
+    } catch (error) {
+        alert('Lỗi kết nối máy chủ!');
+    }
+});
+
+// ==========================================
+// 7. XÓA XE
+// ==========================================
+async function deleteTaxi(taxiId) {
+    if (!confirm('Bạn có chắc chắn muốn xóa chiếc xe này?')) return;
+
+    try {
+        const response = await fetch(`http://localhost:3000/api/taxis/${taxiId}`, {
+            method: 'DELETE'
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            fetchTaxis();
+        } else {
+            alert(data.message);
+        }
+    } catch (error) {
+        alert('Lỗi kết nối máy chủ!');
+    }
+}
