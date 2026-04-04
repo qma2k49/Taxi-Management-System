@@ -12,14 +12,14 @@ GO
 CREATE TABLE Orders (
     OrderID VARCHAR(50) PRIMARY KEY,
     CustomerID INT NOT NULL FOREIGN KEY REFERENCES Users(UserID),
-    DriverID INT NULL FOREIGN KEY REFERENCES Users(UserID), -- Sẽ có giá trị khi tài xế nhận cuốc
+    DriverID INT NULL FOREIGN KEY REFERENCES Users(UserID),
     PickupLat FLOAT NOT NULL,
     PickupLng FLOAT NOT NULL,
     DropoffLat FLOAT NOT NULL,
     DropoffLng FLOAT NOT NULL,
     DistanceKM FLOAT NOT NULL,
     EstimatedPrice FLOAT NOT NULL,
-    Status NVARCHAR(50) DEFAULT N'Đang chờ', -- 'Đang chờ', 'Đã nhận', 'Hoàn thành', 'Hủy'
+    Status NVARCHAR(50) DEFAULT N'Đang chờ',
     CreatedAt DATETIME DEFAULT GETDATE()
 );
 GO

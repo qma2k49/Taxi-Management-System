@@ -207,7 +207,7 @@ currentOrderId = null; // Lưu ID của đơn vừa đặt để theo dõi
 const bookBtn = document.getElementById('book-btn');
 
 if (bookBtn) {
-    bookBtn.addEventListener('click', function () {
+    bookBtn.addEventListener('click', async function () {
         const currentUser = JSON.parse(localStorage.getItem('currentUser'));
 
         if (!currentUser || currentUser.roleId !== 4) {
@@ -215,31 +215,56 @@ if (bookBtn) {
             return;
         }
 
+        // 1. Chuẩn bị gói dữ liệu khớp với cấu trúc Database của bạn
         const newOrder = {
             orderId: "ORD" + new Date().getTime(),
             customerId: currentUser.id,
-            customerName: currentUser.fullName,
             pickupLat: pickupCoords.lat,
             pickupLng: pickupCoords.lng,
             dropoffLat: dropoffCoords.lat,
             dropoffLng: dropoffCoords.lng,
-            distanceKM: currentDistanceKm,
-            estimatedPrice: currentEstimatedPrice,
-            status: 'Đang chờ'
+            distanceKm: parseFloat(currentDistanceKm),
+            estimatedPrice: parseFloat(currentEstimatedPrice)
         };
 
-        currentOrderId = newOrder.orderId;
-
-        // BẮN SỰ KIỆN LÊN SERVER THAY VÌ LƯU LOCALSTORAGE
-        socket.emit('customer_book_ride', newOrder);
-
-        // Cập nhật giao diện (Khóa nút)
-        bookBtn.innerText = 'Đang tìm tài xế gần nhất...';
+        // Đổi trạng thái UI ngay lập tức để khách khỏi bấm 2 lần
+        const originalText = bookBtn.innerText;
+        bookBtn.innerText = 'Đang xử lý...';
         bookBtn.disabled = true;
-        bookBtn.style.backgroundColor = '#6c757d';
-        currentSelectionStep = 3;
 
-        console.log("Đã gửi đơn hàng lên Server:", newOrder);
+        try {
+            // 2. Gọi API để lưu vào SQL Server
+            const response = await fetch('http://localhost:3000/api/orders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newOrder)
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // 3. Xử lý UI khi lưu DB thành công
+                currentOrderId = newOrder.orderId;
+
+                bookBtn.innerText = 'Đang chờ tài xế nhận cuốc...';
+                bookBtn.style.backgroundColor = '#ffc107'; // Màu vàng chờ đợi
+                bookBtn.style.color = '#000';
+                currentSelectionStep = 3;
+
+                alert(`Mã đơn của bạn là: ${newOrder.orderId}. Hệ thống đang điều phối xe!`);
+                console.log("Đã lưu đơn hàng vào DB thành công!");
+
+            } else {
+                alert("Lỗi: " + data.message);
+                bookBtn.innerText = originalText;
+                bookBtn.disabled = false;
+            }
+        } catch (error) {
+            console.error("Lỗi gọi API đặt xe:", error);
+            alert("Lỗi kết nối máy chủ. Vui lòng thử lại!");
+            bookBtn.innerText = originalText;
+            bookBtn.disabled = false;
+        }
     });
 }
 

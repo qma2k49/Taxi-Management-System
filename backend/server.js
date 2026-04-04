@@ -1,25 +1,37 @@
 const express = require('express');
+const path = require('path');
 const http = require('http');
 const cors = require('cors');
 const { Server } = require('socket.io');
 require('dotenv').config();
+
 
 // Khởi tạo app Express
 const app = express();
 app.use(cors());
 app.use(express.json()); // Để đọc được dữ liệu JSON gửi lên từ Frontend
 
+// Phục vụ các file tĩnh (HTML, CSS, JS) từ thư mục frontend
+app.use(express.static(path.join(__dirname, '../frontend')));
+
+// Route mặc định trang chủ
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/index.html'));
+});
+
 // Import các file định tuyến API
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const fareRoutes = require('./routes/fare');
 const taxiRoutes = require('./routes/taxis');
+const ordersRoutes = require('./routes/orders');
 
 // Gắn tiền tố '/api/auth' cho các route bên trong file auth.js
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/fare', fareRoutes);
 app.use('/api/taxis', taxiRoutes);
+app.use('/api/orders', ordersRoutes);
 
 // Khởi tạo HTTP server và nhúng Socket.io vào
 const server = http.createServer(app);
